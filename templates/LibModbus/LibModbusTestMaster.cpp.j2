@@ -1,0 +1,121 @@
+{%- for include in includes %}
+#include "{{ include }}"
+{%- endfor %}
+#include "Modbus/DataConversion.h"
+#include <modbus.h>
+#include <cassert>
+#include <iostream>
+#include <array>
+#include <string>
+#include <cstdio>
+#include <cerrno>
+#include <cstdint>
+#include <unistd.h>
+#include <cstring>
+template<typename T>
+void PrintArray(const T& t) {
+  for (auto pt : t) {
+    std::cout << static_cast<int>(pt) << ",";
+  }
+  std::cout << std::endl;
+}
+
+
+template<typename T>
+int ReadPrint(modbus_t* ctx, const int kAddressStart, int cnt) {
+  T reg{};
+  int rc = modbus_read_registers(ctx, kAddressStart, cnt, reg.data());
+  if(rc == -1) {
+    fprintf(stderr, "Read Error %s\n", modbus_strerror(errno));
+    return -1;
+  }
+  assert(rc == cnt);
+  PrintArray(reg);
+  return 0;
+}
+
+inline int ConnectRtu(modbus_t** ctx, const char* dev_name, const std::size_t baudrate = 9600) {
+  *ctx = modbus_new_rtu(dev_name, baudrate, 'N', 8, 1);
+  return 0;
+}
+
+int main(int argc, char** argv) {
+  HoldingRegisters::DataMap hregs;
+  InputRegisters::DataMap inregs;
+
+  const char* dev_name = nullptr;
+  uint8_t slave_address = 246;
+  if(argc > 1) {
+    dev_name = argv[1];
+    if(argc > 2) {
+      slave_address = atoi(argv[2]);
+    }
+  }
+  printf("Device: %s\n", dev_name);
+  printf("Address: %u\n", slave_address);
+  modbus_t *ctx = nullptr;
+  //  ConnectRtu(&ctx, DemoData::master_name);
+  ConnectRtu(&ctx, dev_name);
+
+  //Set the Modbus address of the remote slave
+  modbus_set_slave(ctx, slave_address);//DemoData::slave_address);
+
+  if (modbus_connect(ctx) == -1) {
+    fprintf(stderr, "Connection failed: %s\n", modbus_strerror(errno));
+    modbus_free(ctx);
+    return -1;
+  }
+  modbus_set_debug(ctx, slave_address);
+  struct timeval response_timeout;
+  // modbus_get_response_timeout(ctx, &response_timeout);
+
+  response_timeout.tv_sec = 1;
+  response_timeout.tv_usec = 0;
+  modbus_set_response_timeout(ctx, &response_timeout);
+  modbus_set_byte_timeout(ctx, &response_timeout);
+  
+  printf("Connection Successful\n");
+  
+  printf("\n\nWriting/Reading Input Registers\n\n");
+
+  {% for entry in input_registers %}
+  printf("Reading {{ entry.name }}\n");
+  std::array<uint16_t, {{ entry.registers }}> read_buffer_{{ entry.name }} {};
+  sleep(1);
+  modbus_read_input_registers(ctx, {{ entry.address }}, {{ entry.registers }}, read_buffer_{{ entry.name }}.data());
+  {
+  std::array<uint8_t, {{ entry.registers }} * sizeof(uint16_t)> u8array{};
+  Modbus::MakeRegistersToBytes(read_buffer_{{ entry.name }}, ArrayView<uint8_t>(u8array.size(), u8array.data()));
+  inregs.SetFieldFromAddress({{ entry.address }}, ArrayView<const uint8_t>(u8array.size(), u8array.data()));
+  const auto value = inregs.get_{{ entry.name }}();
+  {% if entry.length > 1 %}
+  for (auto pt : value) {
+    std::cout << pt << " ";
+  }
+  std::cout << "\n\n";
+  {% else %}
+  std::cout << value << "\n\n";
+  {% endif %}
+  }
+  {%- endfor %}
+
+  printf("Writing/Reading Holding Registers\n");
+  {% for entry in holding_registers %}
+  printf("Writing {{ entry.name }}\n");
+  const std::array<uint16_t, {{ entry.registers }}> write_buffer_{{ entry.name }} {
+  {%- for count in range(entry.registers) %}
+    0xffff - {{ count }},
+  {%- endfor %}
+  };
+  modbus_write_registers(ctx, {{ entry.address }}, {{ entry.registers }}, write_buffer_{{ entry.name }}.data());
+  sleep(1);
+
+  printf("Reading {{ entry.name }}\n");
+  std::array<uint16_t, {{ entry.registers }}> read_buffer_{{ entry.name }} {};
+  ReadPrint<decltype(read_buffer_{{ entry.name }})>(ctx, {{ entry.address }}, {{ entry.registers }});
+  sleep(1);
+  {% endfor %}
+
+  modbus_close(ctx);
+  modbus_free(ctx);
+}

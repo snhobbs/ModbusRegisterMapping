@@ -1,0 +1,67 @@
+import sys
+from time import sleep
+from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+
+import sys
+from pymodbus_master import *
+from MappedDataStore import *
+sleep_time = 0
+kModbusAddress = 1
+
+{% for entry in input_registers %}
+def ReadInputRegister_{{entry.name}}(master):
+    address = {{ entry.address }}
+    registers = {{ entry.registers }}
+    response = master.client.read_input_registers(address, registers, unit=kModbusAddress)
+    data_bytes = RegistersToBytes(response.registers)
+    # Transform to correct type
+    value = TransformBytesToDataType({{ entry.dtype }}, data_bytes)
+    return value
+{% endfor %}
+
+{% for entry in holding_registers %}
+def ReadHoldingRegister_{{entry.name}}(master):
+    address = {{ entry.address }}
+    registers = {{ entry.registers }}
+    response = master.client.read_holding_registers(address, registers, unit=kModbusAddress)
+    data_bytes = RegistersToBytes(response.registers)
+    value = TransformBytesToDataType({{ entry.dtype }}, data_bytes)
+    return value
+
+def WriteHoldingRegister_{{entry.name}}(master, register_values):
+    registers = {{ entry.registers }}
+    assert(len(register_values) == registers)
+    response = master.client.write_registers({{ entry.address }}, register_values, unit=kModbusAddress)
+    print("{{entry.name}} Response:", response)
+{% endfor %}
+
+
+if __name__ == "__main__":
+    port = "/tmp/ptyp0"
+    kModbusAddress = 1
+    if len(sys.argv) > 1:
+        port = sys.argv[1]
+    if len(sys.argv) > 2:
+        kModbusAddress = int(sys.argv[2])
+    print("Device: %s"%port)
+    print("Address: %d"%kModbusAddress)
+    master = ModbusMaster(port, 9600)
+    print("%s\nReading Input Registers\n%s"%("#"*80, "#"*80))
+
+{% for entry in input_registers %}
+    value = ReadInputRegister_{{entry.name}}(master)
+    print("{{ entry.name }}: {}\n".format(value))
+    sleep(sleep_time)
+{% endfor %}
+
+    print("%s\nWriting/Reading Holding Registers\n%s"%("#"*80, "#"*80))
+
+{% for entry in holding_registers %}
+    {{ entry.name }}_write_values = list(range({{ entry.registers }}))
+    response = WriteHoldingRegister_{{entry.name}}(master, {{ entry.name }}_write_values)
+    value = ReadHoldingRegister_{{entry.name}}(master)
+    print("{{ entry.name }}: {}\n".format(value))
+    #assert({{ entry.name }}_write_values == response.registers)
+
+{% endfor %}
+    master.disconnect()

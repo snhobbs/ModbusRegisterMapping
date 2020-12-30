@@ -1,0 +1,10 @@
+{%- for entry in entries %}
+{%- for function_code in entry.functions %}
+{%- for i in range(entry.registers) -%}
+{{ "D%04d" % (entry.plc_address + i) }},{{ entry.plc_variable_name }}{%- if entry.registers > 1 %}_{{i}}{%endif%}_{{ entry.slave.address }},{{ entry.name }} 
+  {%- if entry.registers > 1 %} {{ i + 1 }}/{{ entry.registers }} {% if i == 0 %} (lowest word) {% elif i == entry.registers - 1 %} (highest word) {% endif %}
+  {%- endif %} 
+{% endfor %}
+{%- endfor %}
+{%- endfor %}
+
