@@ -1,13 +1,13 @@
 from jinja2 import Template, Environment, FileSystemLoader
 from os import path
-
-def MakePyModbusTest(input_registers, holding_registers, includes):
+#def MakeMap(template_directory, entries, fname, title):
+def MakeMap(entries, fname, title):
     template_directory = path.join(path.dirname(__file__), 'templates')
     env = Environment(loader=FileSystemLoader(template_directory))
-    register_map_template = "PyModbusTestMaster.py.j2"
-    fname = register_map_template.strip(".j2")
+    register_map_template = "RegisterMap.md.j2"
     template = env.get_template(register_map_template)
-    rendering = template.render(input_registers=input_registers, holding_registers=holding_registers, includes=includes)
+    rendering = template.render(entries=entries, title=title)
     with open(fname, 'w') as f:
         f.write(rendering)
+
 

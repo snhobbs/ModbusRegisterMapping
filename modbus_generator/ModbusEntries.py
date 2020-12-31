@@ -49,7 +49,6 @@ class ModbusRegister:
         registers = float(GetDataTypeSize(dtype) * length) / GetDataTypeSize(DataType.uint16_t)
         self.registers = int(math.ceil(registers))
         assert((self.length * GetDataTypeSize(dtype)) % GetDataTypeSize(DataType.uint16_t) == 0)
-        self.address = 0
         self.function_type = function_type
         assert(self.registers > 0)
         assert(type(self.name) is str)
@@ -59,8 +58,17 @@ class ModbusRegister:
         assert(self.length >= 1)
 
 class MapEntry:
-    def __init__(self, register):
+    def __init__(self, register, address=0):
         self.register_ = register
+        self.address = address
+    @property
+    def registers(self):
+        return self.register_.registers
+
+    @property
+    def dtype(self):
+        return self.register_.dtype
+
     @property
     def dtype_ctype(self):
         return GetDataTypeCType(self.register_.dtype)

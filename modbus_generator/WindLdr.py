@@ -1,5 +1,6 @@
 from jinja2 import Template, Environment, FileSystemLoader
 from . ModbusEntries import FunctionType
+from os import path
 
 class WindLDREntry():
     def __init__(self, map_entry, slave):
@@ -57,7 +58,8 @@ class WindLDREntry():
 
         return name[:max_length-len(append)]
 
-def MakeWindLDRConfig(template_directory, entries, fname):
+def MakeWindLDRConfig(entries, fname):
+    template_directory = path.join(path.dirname(__file__), 'templates')
     master_address = 0
     env = Environment(loader=FileSystemLoader(template_directory))
     for register_map_template in ("WindLDRConfiguration.csv.j2", "WindLDRTagEditor.csv.j2"):

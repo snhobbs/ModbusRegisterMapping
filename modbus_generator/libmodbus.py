@@ -1,6 +1,9 @@
 from jinja2 import Template, Environment, FileSystemLoader
+from os import path
 
-def MakeLibModbusTest(template_directory, input_registers, holding_registers, includes):
+#def MakeLibModbusTest(template_directory, input_registers, holding_registers, includes):
+def MakeLibModbusTest(input_registers, holding_registers, includes):
+    template_directory = path.join(path.dirname(__file__), 'templates')
     env = Environment(loader=FileSystemLoader(template_directory))
     register_map_template = "LibModbusTestMaster.cpp.j2"
     fname = register_map_template.strip(".j2")
