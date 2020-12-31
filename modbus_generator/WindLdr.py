@@ -59,9 +59,8 @@ class WindLDREntry():
         return name[:max_length-len(append)]
 
 def MakeWindLDRConfig(entries, fname):
-    template_directory = path.join([path.dirname(__file__), 'templates', "WindLDR"])
+    template_directory = path.join(path.dirname(__file__), 'templates', "WindLDR")
     master_address = 0
-    print("Directory:", template_directory)
     env = Environment(loader=FileSystemLoader(template_directory))
     for register_map_template in ("WindLDRConfiguration.csv.j2", "WindLDRTagEditor.csv.j2"):
         template = env.get_template(register_map_template)
