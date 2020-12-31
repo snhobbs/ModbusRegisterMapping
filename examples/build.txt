@@ -1,0 +1,1 @@
+g++ -std=c++17 LibModbusTestMaster.cpp -I../../ModbusRegisters/include -I/usr/include/modbus -lmodbus -o LibModbusTestMaster

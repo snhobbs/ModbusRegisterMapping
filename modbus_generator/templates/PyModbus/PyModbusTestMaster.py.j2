@@ -3,11 +3,56 @@ from time import sleep
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 
 import sys
-from pymodbus_master import *
-from MappedDataStore import *
+from modbus_generator import DataType
+
 sleep_time = 0
 kModbusAddress = 1
 
+def RegistersToBytes(registers):
+  text = []
+  for register in registers:
+      text.append((register>>8)&0xff)
+      text.append((register&0xff))
+  return bytes(text)
+
+def DecodeText(data: list):
+    return RegistersToBytes(data).decode("utf-8")
+
+def TransformBytesToDataType(dtype : DataType, data : bytes, byteorder="big"):
+    if(dtype == DataType.int32_t):
+        return int.from_bytes(data, byteorder=byteorder, signed=True)
+    elif(dtype == DataType.uint32_t):
+        return int.from_bytes(data, byteorder=byteorder, signed=False)
+    elif(dtype == DataType.int16_t):
+        return int.from_bytes(data, byteorder=byteorder, signed=True)
+    elif(dtype == DataType.uint16_t):
+        return int.from_bytes(data, byteorder=byteorder, signed=False)
+    elif(dtype == DataType.int8_t):
+        return int.from_bytes(data, byteorder=byteorder, signed=True)
+    elif(dtype == DataType.uint8_t):
+        return int.from_bytes(data, byteorder=byteorder, signed=False)
+    elif(dtype == DataType.kString):
+        return data.decode("utf-8")
+
+class ModbusMaster:
+    parity = 'N'
+    bytesize = 8
+    stopbits = 1
+    method= "rtu"
+    timeout_seconds = .1
+
+    def __init__(self, port, baud = 9600):
+        self.port = port
+        self.baudrate = baud
+        #method=self.method,
+        self.client = ModbusClient(method=self.method, port=self.port, parity=self.parity,
+            timeout=self.timeout_seconds, bytesize=self.bytesize,
+            stopbits=self.stopbits, baudrate=self.baudrate)
+        self.connect()
+
+    def connect(self):
+        self.client.connect()
+        print("Connection Successful")
 {% for entry in input_registers %}
 def ReadInputRegister_{{entry.name}}(master):
     address = {{ entry.address }}

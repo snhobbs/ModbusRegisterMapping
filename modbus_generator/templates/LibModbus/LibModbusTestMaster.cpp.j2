@@ -66,13 +66,20 @@ int main(int argc, char** argv) {
     return -1;
   }
   modbus_set_debug(ctx, slave_address);
+
+
+#ifdef MODBUS_TIMEVAL
   struct timeval response_timeout;
-  // modbus_get_response_timeout(ctx, &response_timeout);
+  modbus_get_response_timeout(ctx, &response_timeout);
 
   response_timeout.tv_sec = 1;
   response_timeout.tv_usec = 0;
   modbus_set_response_timeout(ctx, &response_timeout);
   modbus_set_byte_timeout(ctx, &response_timeout);
+#else
+  modbus_set_response_timeout(ctx, 1, 0);
+  modbus_set_byte_timeout(ctx, 1, 0);
+#endif
   
   printf("Connection Successful\n");
   

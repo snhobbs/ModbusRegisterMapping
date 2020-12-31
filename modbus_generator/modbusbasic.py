@@ -1,8 +1,9 @@
 from jinja2 import Template, Environment, FileSystemLoader
 from os import path
+import datetime, os
 
 def MakeHeader(entries, fname, namespace):
-    template_directory = path.join(path.dirname(__file__), 'templates')
+    template_directory = path.join(path.dirname(__file__), 'templates', "ModbusBasic")
     env = Environment(loader=FileSystemLoader(template_directory))
     data_store_template = "MappedDataStore.h.j2"
     template = env.get_template(data_store_template)

@@ -57,38 +57,41 @@ class ModbusRegister:
         assert(type(self.function_type) is FunctionType)
         assert(self.length >= 1)
 
-class MapEntry:
-    def __init__(self, register, address=0):
-        self.register_ = register
-        self.address = address
-    @property
-    def registers(self):
-        return self.register_.registers
+class MapEntry(ModbusRegister):
+    def __init__(self, **kwargs):
+        if "register" in kwargs:
+            reg = kwargs["register"]
+            super().__init__(reg.name, reg.dtype, reg.length, reg.function_type)
+        else:
+            super().__init__(kwargs["name"], kwargs["dtype"], kwargs["length"], kwargs["function_type"])
+        self._address = None
 
-    @property
-    def dtype(self):
-        return self.register_.dtype
+    def set_address(self, address):
+        self._address = address
+
+    def address(self):
+        return self.address
 
     @property
     def dtype_ctype(self):
-        return GetDataTypeCType(self.register_.dtype)
+        return GetDataTypeCType(self.dtype)
 
     @property
     def read_code(self):
-        if self.register_.function_type == FunctionType.kHolding:
+        if self.function_type == FunctionType.kHolding:
             return 3
         return 4
 
     @property
     def write_code(self):
-        if self.register_.function_type == FunctionType.kHolding:
+        if self.function_type == FunctionType.kHolding:
             return 16
         else:
             assert(0)
 
     @property
     def memory_code(self):
-        return self.register_.function_type.value
+        return self.function_type.value
 
 class Slave:
     def __init__(self, address):
