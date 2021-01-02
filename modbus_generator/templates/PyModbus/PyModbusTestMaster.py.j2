@@ -53,6 +53,11 @@ class ModbusMaster:
     def connect(self):
         self.client.connect()
         print("Connection Successful")
+
+    def disconnect(self):
+        self.client.close()
+        print("Connection Closed Successfully")
+
 {% for entry in input_registers %}
 def ReadInputRegister_{{entry.name}}(master):
     address = {{ entry.address }}
