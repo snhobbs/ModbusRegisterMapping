@@ -54,6 +54,11 @@ class ModbusMaster:
         self.client.connect()
         print("Connection Successful")
 
+    def disconnect(self):
+        self.client.close()
+        print("Connection Closed Successfully")
+
+
 def ReadInputRegister_version(master):
     address = 0
     registers = 32

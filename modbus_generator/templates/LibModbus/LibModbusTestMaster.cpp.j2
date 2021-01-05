@@ -1,7 +1,8 @@
 {%- for include in includes %}
 #include "{{ include }}"
 {%- endfor %}
-#include "Modbus/DataConversion.h"
+#include <Modbus/Utilities.h>
+#include <Modbus/MappedRegisterDataStore.h>
 #include <modbus.h>
 #include <cassert>
 #include <iostream>
@@ -40,8 +41,12 @@ inline int ConnectRtu(modbus_t** ctx, const char* dev_name, const std::size_t ba
 }
 
 int main(int argc, char** argv) {
-  HoldingRegisters::DataMap hregs;
-  InputRegisters::DataMap inregs;
+  HoldingRegisters hregs_struct;
+  HoldingRegistersWrapper hregs_wrapper{&hregs_struct};
+  Modbus::MappedRegisterDataStore<HoldingRegistersWrapper> hregs{&hregs_wrapper};
+  InputRegisters inregs_struct;
+  InputRegistersWrapper inregs_wrapper{&inregs_struct};
+  Modbus::MappedRegisterDataStore<InputRegistersWrapper> inregs{&inregs_wrapper};
 
   const char* dev_name = nullptr;
   uint8_t slave_address = 246;
@@ -94,7 +99,7 @@ int main(int argc, char** argv) {
   std::array<uint8_t, {{ entry.registers }} * sizeof(uint16_t)> u8array{};
   Modbus::MakeRegistersToBytes(read_buffer_{{ entry.name }}, ArrayView<uint8_t>(u8array.size(), u8array.data()));
   inregs.SetFieldFromAddress({{ entry.address }}, ArrayView<const uint8_t>(u8array.size(), u8array.data()));
-  const auto value = inregs.get_{{ entry.name }}();
+  const auto value = inregs_wrapper.get_{{ entry.name }}();
   {% if entry.length > 1 %}
   for (auto pt : value) {
     std::cout << pt << " ";

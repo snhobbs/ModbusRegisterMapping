@@ -70,8 +70,8 @@ if __name__ == "__main__":
     modbus_generator.MakeMap(GetHoldingRegisterMapEntries(), "HoldingRegisterMappedDataStore.md", title="Holding Register Map")
     modbus_generator.MakeMap(GetInputRegisterMapEntries(), "InputRegisterMappedDataStore.md", title="Input Register Map")
 
-    modbus_generator.MakeHeader(GetHoldingRegisterMapEntries(), "HoldingRegisterMappedDataStore.h", namespace="HoldingRegisters")
-    modbus_generator.MakeHeader(GetInputRegisterMapEntries(), "InputRegisterMappedDataStore.h", namespace="InputRegisters")
+    modbus_generator.MakeHeader(GetHoldingRegisterMapEntries(), "HoldingRegisterMappedDataStore.h", name="HoldingRegisters")
+    modbus_generator.MakeHeader(GetInputRegisterMapEntries(), "InputRegisterMappedDataStore.h", name="InputRegisters")
 
     modbus_generator.MakeLibModbusTest(
         input_registers=GetInputRegisterMapEntries(),
