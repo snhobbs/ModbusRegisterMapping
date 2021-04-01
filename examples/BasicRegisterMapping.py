@@ -84,3 +84,4 @@ if __name__ == "__main__":
         includes=["HoldingRegisterMappedDataStore.h", "InputRegisterMappedDataStore.h"])
 
     MakeWindLdrMap()
+    modbus_generator.MakeFbs(GetHoldingRegisterMapEntries(), "HoldingRegisterMappedDataStore.fbs", name="HoldingRegisters")

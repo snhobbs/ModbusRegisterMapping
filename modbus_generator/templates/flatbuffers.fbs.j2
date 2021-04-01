@@ -1,0 +1,37 @@
+{%- if namespaces is defined -%}
+namespace {{ namespaces|join(".") }} 
+{%- endif %}
+
+struct {{ name }} {
+{%- for entry in entries -%}
+  {{entry.name}}:
+  {%- if(entry.length > 1) -%}
+  [
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "int32_t" -%}
+  int32
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "uint32_t" -%}
+  uint32
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "int16_t" -%}
+  int16
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "uint16_t" -%}
+  uint16
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "int8_t" -%}
+  int8
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "uint8_t"-%}
+  uint8
+  {%- endif -%}
+  {%- if entry.dtype_ctype == "string" -%}
+  uint8
+  {%- endif -%}
+  {%- if(entry.length > 1) -%}
+   :{{ entry.length }}]
+  {%- endif -%}
+  ;
+{%- endfor %}
+}
