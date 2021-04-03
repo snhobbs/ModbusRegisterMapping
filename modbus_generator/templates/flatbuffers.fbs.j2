@@ -1,10 +1,11 @@
-{%- if namespaces|length != 0 -%}
-namespace {{ namespaces|join(".") }} 
+{%- if namespace|length != 0 -%}
+namespace {{ namespace }};
 {%- endif %}
 
 
+
 struct HoldingRegisters {
-{%- for entry in schema.holding_registers -%}
+{% for entry in schema.holding_registers %}
   {{entry.name}}:
   {%- if(entry.length > 1) -%}
   [
@@ -18,12 +19,12 @@ struct HoldingRegisters {
    :{{ entry.length }}]
   {%- endif -%}
   ;
-{%- endfor %}
+{% endfor %}
 }
 
 
 struct InputRegisters {
-{%- for entry in schema.input_registers -%}
+{% for entry in schema.input_registers %}
   {{entry.name}}:
   {%- if(entry.length > 1) -%}
   [
@@ -37,6 +38,5 @@ struct InputRegisters {
    :{{ entry.length }}]
   {%- endif -%}
   ;
-{%- endfor %}
-
+{% endfor %}
 }

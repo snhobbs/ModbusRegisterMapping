@@ -34,7 +34,7 @@ def main(**kwargs):
     if kwargs["libmodbus"]:
         modbus_generator.generate_libmodbus_server(schema)
     if kwargs["flatbuffers"]:
-        modbus_generator.generate_flatbuffers_schema(schema, namespaces)
+        modbus_generator.generate_flatbuffers_schema(schema, kwargs["namespace"])
     if kwargs["windldr"]:
         modbus_generator.generate_windldr_config(schema, offset=kwargs["windldr_offset"])
     if kwargs["md"]:
