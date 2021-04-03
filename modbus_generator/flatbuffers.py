@@ -15,3 +15,24 @@ def MakeFbs(entries, fname, name):
         f.write(rendering)
 
     os.system("clang-format %s -i --style=Google"%fname)
+
+def generate_flatbuffers_schema(schema, namespaces=None):
+    if namespaces is None:
+        namespaces = ""
+    else:
+        namespaces = ".".join(namespaces)
+    template_directory = path.join(path.dirname(__file__), 'templates')
+    env = Environment(loader=FileSystemLoader(template_directory))
+    env.trim_blocks = True
+    env.lstrip_blocks = True
+
+    data_store_template = "flatbuffers.fbs.j2"
+    fname = data_store_template.strip(".j2")
+
+    template = env.get_template(data_store_template)
+    rendering = template.render(schema=schema, namespaces=namespaces, fname=fname, timestamp=datetime.datetime.now())
+    with open(fname, 'w') as f:
+        f.write(rendering)
+
+    os.system("clang-format %s -i --style=Google"%fname)
+

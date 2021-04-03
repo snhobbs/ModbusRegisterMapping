@@ -1,37 +1,42 @@
-{%- if namespaces is defined -%}
+{%- if namespaces|length != 0 -%}
 namespace {{ namespaces|join(".") }} 
 {%- endif %}
 
-struct {{ name }} {
-{%- for entry in entries -%}
+
+struct HoldingRegisters {
+{%- for entry in schema.holding_registers -%}
   {{entry.name}}:
   {%- if(entry.length > 1) -%}
   [
   {%- endif -%}
-  {%- if entry.dtype_ctype == "int32_t" -%}
-  int32
-  {%- endif -%}
-  {%- if entry.dtype_ctype == "uint32_t" -%}
-  uint32
-  {%- endif -%}
-  {%- if entry.dtype_ctype == "int16_t" -%}
-  int16
-  {%- endif -%}
-  {%- if entry.dtype_ctype == "uint16_t" -%}
-  uint16
-  {%- endif -%}
-  {%- if entry.dtype_ctype == "int8_t" -%}
-  int8
-  {%- endif -%}
-  {%- if entry.dtype_ctype == "uint8_t"-%}
+  {%- if entry.dtype == "string" -%}
   uint8
-  {%- endif -%}
-  {%- if entry.dtype_ctype == "string" -%}
-  uint8
+  {%- else -%}
+  {{ entry.dtype }}
   {%- endif -%}
   {%- if(entry.length > 1) -%}
    :{{ entry.length }}]
   {%- endif -%}
   ;
 {%- endfor %}
+}
+
+
+struct InputRegisters {
+{%- for entry in schema.input_registers -%}
+  {{entry.name}}:
+  {%- if(entry.length > 1) -%}
+  [
+  {%- endif -%}
+  {%- if entry.dtype == "string" -%}
+  uint8
+  {%- else -%}
+  {{ entry.dtype }}
+  {%- endif -%}
+  {%- if(entry.length > 1) -%}
+   :{{ entry.length }}]
+  {%- endif -%}
+  ;
+{%- endfor %}
+
 }

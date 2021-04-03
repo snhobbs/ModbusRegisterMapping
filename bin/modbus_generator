@@ -11,14 +11,15 @@ import sys, os
 @click.option('--pymodbus', '-p', is_flag=True, help='Pymodbus server')
 @click.option('--libmodbus', '-l', is_flag=True, help='libmodbus server')
 @click.option('--libmodbus-includes', multiple=True, type=str, help='Additional includes for libmodbus')
-@click.option('--modbus_basic', '-m', is_flag=True, help='ModbusBasic server')
-@click.option('--modbus_basic-includes', multiple=True, type=str, help='Additional includes for modbus basic')
+@click.option('--flatbuffers', '-m', is_flag=True, help='ModbusBasic server')
+@click.option('--namespace', '-n', type=str, default="", help='namespace used, use periods to seperate')
 @click.option('--windldr', '-w', is_flag=True, help='Windldr server configuration')
 @click.option('--windldr-offset', type=int, default=0, help='Offset for windldr')
 @click.option('--md', is_flag=True, help='Markdown Documentation')
 @click.option('--test_master', '-t', is_flag=True, help='Generate corresponding test files for the languages chosen')
 def main(**kwargs):
     schema_string = ""
+    namespaces = kwargs["namespace"].strip(".").split(".")
     try:
         with open(kwargs["file"], 'r') as f:
             schema_string = f.read()
@@ -32,8 +33,8 @@ def main(**kwargs):
         modbus_generator.generate_pymodbus_server(schema)
     if kwargs["libmodbus"]:
         modbus_generator.generate_libmodbus_server(schema)
-    if kwargs["modbus_basic"]:
-        modbus_generator.generate_modbus_basic_server(schema)
+    if kwargs["flatbuffers"]:
+        modbus_generator.generate_flatbuffers_schema(schema, namespaces)
     if kwargs["windldr"]:
         modbus_generator.generate_windldr_config(schema, offset=kwargs["windldr_offset"])
     if kwargs["md"]:
@@ -44,8 +45,6 @@ def main(**kwargs):
             modbus_generator.generate_pymodbus_master(schema)
         if kwargs["libmodbus"]:
             modbus_generator.generate_libmodbus_master(schema)
-        if kwargs["modbus_basic"]:
-            modbus_generator.generate_modbus_basic_master(schema)
 
 if __name__ == "__main__":
     main()
