@@ -1,4 +1,3 @@
-from . ModbusEntries import FunctionType
 from . import get_template
 from os import path
 
