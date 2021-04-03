@@ -1,33 +1,14 @@
-from jinja2 import Template, Environment, FileSystemLoader
-from os import path
-import datetime, os
-
-def MakeFbs(entries, fname, name):
-    template_directory = path.join(path.dirname(__file__), 'templates')
-    env = Environment(loader=FileSystemLoader(template_directory))
-    env.trim_blocks = True
-    env.lstrip_blocks = True
-
-    data_store_template = "flatbuffers.fbs.j2"
-    template = env.get_template(data_store_template)
-    rendering = template.render(entries=entries, name=name, fname=fname, timestamp=datetime.datetime.now())
-    with open(fname, 'w') as f:
-        f.write(rendering)
-
-    os.system("clang-format %s -i --style=Google"%fname)
+from . import get_template
+import datetime
 
 def generate_flatbuffers_schema(schema, namespace=None):
     if namespace is None:
         namespace = ""
-    template_directory = path.join(path.dirname(__file__), 'templates')
-    env = Environment(loader=FileSystemLoader(template_directory))
-    env.trim_blocks = True
-    env.lstrip_blocks = True
 
-    data_store_template = "flatbuffers.fbs.j2"
-    fname = data_store_template.strip(".j2")
+    template_name = "flatbuffers.fbs.j2"
+    template = get_template(template_name)
+    fname = template_name.strip(".j2")
 
-    template = env.get_template(data_store_template)
     rendering = template.render(schema=schema, namespace=namespace, fname=fname, timestamp=datetime.datetime.now())
     with open(fname, 'w') as f:
         f.write(rendering)
