@@ -1,5 +1,5 @@
 // Req. No.,Function Code,Master Device Address (Data Address),Data Size (Number of 16 bit registers),Slave Number (Modbus Slave Address),Modbus Slave Address (Data Address)
-{%- for entry in entries %}
+{%- for entry in schema.holding_registers %}
 {%- for function_code in entry.functions %}
 {{ loop.index }},{{ function_code }},{{ "D%04d" % entry.plc_address }},{{ entry.registers }},{{ entry.slave.address }},{{ "%d" %(entry.memory_code * 100000 + entry.address + 1) }},{{ entry.name  }}
 {%- endfor %}

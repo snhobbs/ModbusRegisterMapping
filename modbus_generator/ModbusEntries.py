@@ -5,15 +5,6 @@ from data_stores import DataType, GetDataTypeCType, GetDataTypeSize
 import data_stores
 
 
-def SetAddresses(entries):
-    address = 0
-    for entry in entries:
-        if entry.dtype not in [DataType.uint16_t, DataType.int16_t]:
-            entry.address = address + address % 2
-        else:
-            entry.address = address
-        address = entry.address + entry.registers
-
 
 class FunctionType(IntEnum):
     kInput = 3

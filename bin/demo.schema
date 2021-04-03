@@ -1,4 +1,4 @@
-[holding registers]
+[input registers]
 version:string, 64
 firmware_version:string, 64
 compile_date:string, 64

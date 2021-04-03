@@ -14,5 +14,12 @@ def MakePyModbusTest(input_registers, holding_registers, includes):
 def generate_pymodbus_server(schema):
     pass
 
-def generate_pymodbus_master(schema):
-    pass
+def generate_pymodbus_master(schema, includes=None):
+    template_directory = path.join(path.dirname(__file__), 'templates', "PyModbus")
+    env = Environment(loader=FileSystemLoader(template_directory))
+    register_map_template = "PyModbusTestMaster.py.j2"
+    fname = register_map_template.strip(".j2")
+    template = env.get_template(register_map_template)
+    rendering = template.render(input_registers=schema.input_registers, holding_registers=schema.holding_registers, includes=includes)
+    with open(fname, 'w') as f:
+        f.write(rendering)

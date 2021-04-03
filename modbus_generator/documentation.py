@@ -11,6 +11,14 @@ def MakeMap(entries, fname, title):
     with open(fname, 'w') as f:
         f.write(rendering)
 
-
 def generate_markdown(schema):
-    pass
+    template_directory = path.join(path.dirname(__file__), 'templates', "Documentation")
+    env = Environment(loader=FileSystemLoader(template_directory))
+    register_map_template = "RegisterMap.md.j2"
+    fname = "RegisterMap.md"
+    template = env.get_template(register_map_template)
+    rendering = template.render(schema=schema, title="title")
+    with open(fname, 'w') as f:
+        f.write(rendering)
+
+
