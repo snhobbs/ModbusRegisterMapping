@@ -1,5 +1,6 @@
 from jinja2 import Template, Environment, FileSystemLoader
 from os import path
+
 #def MakeMap(template_directory, entries, fname, title):
 def MakeMap(entries, fname, title):
     template_directory = path.join(path.dirname(__file__), 'templates', "Documentation")
@@ -11,3 +12,5 @@ def MakeMap(entries, fname, title):
         f.write(rendering)
 
 
+def generate_markdown(schema):
+    pass

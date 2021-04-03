@@ -12,3 +12,8 @@ def MakeLibModbusTest(input_registers, holding_registers, includes):
     with open(fname, 'w') as f:
         f.write(rendering)
 
+def generate_libmodbus_server(schema, includes=None):
+    pass
+
+def generate_libmodbus_master(schema, includes=None):
+    pass

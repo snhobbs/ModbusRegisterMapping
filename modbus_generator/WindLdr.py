@@ -68,3 +68,6 @@ def MakeWindLDRConfig(entries, fname):
         with open(register_map_template.strip('.j2'), 'w') as f:
             f.write(rendering)
 
+def generate_windldr_config(schema, offset):
+    pass
+

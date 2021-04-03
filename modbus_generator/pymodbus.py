@@ -11,3 +11,8 @@ def MakePyModbusTest(input_registers, holding_registers, includes):
     with open(fname, 'w') as f:
         f.write(rendering)
 
+def generate_pymodbus_server(schema):
+    pass
+
+def generate_pymodbus_master(schema):
+    pass
