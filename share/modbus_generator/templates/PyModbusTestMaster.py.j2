@@ -18,20 +18,20 @@ def RegistersToBytes(registers):
 def DecodeText(data: list):
     return RegistersToBytes(data).decode("utf-8")
 
-def TransformBytesToDataType(dtype : DataType, data : bytes, byteorder="big"):
-    if(dtype == DataType.int32_t):
+def TransformBytesToDataType(dtype, data : bytes, byteorder="big"):
+    if(dtype == "int32"):
         return int.from_bytes(data, byteorder=byteorder, signed=True)
-    elif(dtype == DataType.uint32_t):
+    elif(dtype == "uint32"):
         return int.from_bytes(data, byteorder=byteorder, signed=False)
-    elif(dtype == DataType.int16_t):
+    elif(dtype == "int16"):
         return int.from_bytes(data, byteorder=byteorder, signed=True)
-    elif(dtype == DataType.uint16_t):
+    elif(dtype == "uint16"):
         return int.from_bytes(data, byteorder=byteorder, signed=False)
-    elif(dtype == DataType.int8_t):
+    elif(dtype == "int8"):
         return int.from_bytes(data, byteorder=byteorder, signed=True)
-    elif(dtype == DataType.uint8_t):
+    elif(dtype == "uint8"):
         return int.from_bytes(data, byteorder=byteorder, signed=False)
-    elif(dtype == DataType.kString):
+    elif(dtype == "string"):
         return data.decode("utf-8")
 
 class ModbusMaster:
