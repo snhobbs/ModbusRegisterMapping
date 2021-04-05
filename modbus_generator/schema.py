@@ -21,6 +21,20 @@ def get_dtype_size(dtype):
     print(dtype)
     assert(0)
 
+def make_variable_name(entry_name, registers, max_length=20):
+    append = ""
+    if registers > 1:
+        append += "_%d"%(registers - 1)
+    append += "_%d"%0xff
+
+    name = entry_name
+    if len(append) + len(entry_name) > max_length:
+        split = entry_name.split("_")
+        if len(split) > 2:
+            name = "_".join(split[1:])
+
+    return name[:max_length-len(append)]
+
 class Register:
     def __init__(self, name, dtype, length, address=0):
         self.name = name
@@ -32,6 +46,10 @@ class Register:
     def registers(self):
         entry_size = get_dtype_size(self.dtype)*self.length
         return entry_size//2 + entry_size%2
+
+    @property
+    def plc_variable_name(self):
+        return make_variable_name(self.name, self.registers, 20)
 
 def parse_register_section(section):
     entries = []

@@ -15,6 +15,7 @@ import sys, os
 @click.option('--namespace', '-n', type=str, default="", help='namespace used, use periods to seperate')
 @click.option('--windldr', '-w', is_flag=True, help='Windldr server configuration')
 @click.option('--windldr-offset', type=int, default=0, help='Offset for windldr')
+@click.option('--network', type=str, default="", help='Network and register layout file')
 @click.option('--md', is_flag=True, help='Markdown Documentation')
 @click.option('--test_master', '-t', is_flag=True, help='Generate corresponding test files for the languages chosen')
 def main(**kwargs):
@@ -29,6 +30,15 @@ def main(**kwargs):
 
     schema = modbus_generator.Schema.read(schema_string)
 
+    network=None
+    if len(kwargs["network"]) > 0:
+        try:
+            with open(kwargs["network"], 'r') as f:
+                network = modbus_generator.Network.from_string(f.read())
+        except FileNotFoundError:
+            print("Network file %s not found"%kwargs["network"])
+            return errno.ENOENT
+
     if kwargs["pymodbus"]:
         modbus_generator.generate_pymodbus_server(schema)
     if kwargs["libmodbus"]:
@@ -36,7 +46,9 @@ def main(**kwargs):
     if kwargs["flatbuffers"]:
         modbus_generator.generate_flatbuffers_schema(schema, kwargs["namespace"])
     if kwargs["windldr"]:
-        modbus_generator.generate_windldr_config(schema, offset=kwargs["windldr_offset"])
+        if network is None:
+            print("Requires a network configuration file to generate the windldr configuration")
+        modbus_generator.generate_windldr_config(schema, offset=kwargs["windldr_offset"], network=network)
     if kwargs["md"]:
         modbus_generator.generate_markdown(schema)
 
