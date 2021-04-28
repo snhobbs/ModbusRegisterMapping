@@ -1,5 +1,4 @@
 from jinja2 import Template, Environment, FileSystemLoader
-from . ModbusEntries import FunctionType
 from os import path
 
 class WindLDREntry():
@@ -10,7 +9,7 @@ class WindLDREntry():
 
     @property
     def functions(self):
-        if self.function_type == FunctionType.kHolding:
+        if self.function_type == "holding":
             return [self.map_entry.read_code, self.map_entry.write_code]
         return [self.map_entry.read_code]
 
