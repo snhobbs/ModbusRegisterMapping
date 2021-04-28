@@ -11,7 +11,6 @@ setup(name='modbus_generator',
     packages=find_packages(),
     install_requires=[
         'jinja2',
-        #'data-store'
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
