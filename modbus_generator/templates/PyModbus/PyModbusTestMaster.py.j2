@@ -1,12 +1,8 @@
-import sys
+import sys, click
 from time import sleep
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 
-import sys
-from modbus_generator import DataType
-
-sleep_time = 0
-kModbusAddress = 1
+sleep_time = 0.01
 
 def RegistersToBytes(registers):
   text = []
@@ -18,20 +14,20 @@ def RegistersToBytes(registers):
 def DecodeText(data: list):
     return RegistersToBytes(data).decode("utf-8")
 
-def TransformBytesToDataType(dtype : DataType, data : bytes, byteorder="big"):
-    if(dtype == DataType.int32_t):
+def TransformBytesToDataType(dtype : str, data : bytes, byteorder="big"):
+    if(dtype == "int32"):
         return int.from_bytes(data, byteorder=byteorder, signed=True)
-    elif(dtype == DataType.uint32_t):
+    elif(dtype == "uint32"):
         return int.from_bytes(data, byteorder=byteorder, signed=False)
-    elif(dtype == DataType.int16_t):
+    elif(dtype == "int16"):
         return int.from_bytes(data, byteorder=byteorder, signed=True)
-    elif(dtype == DataType.uint16_t):
+    elif(dtype == "uint16"):
         return int.from_bytes(data, byteorder=byteorder, signed=False)
-    elif(dtype == DataType.int8_t):
+    elif(dtype == "int8"):
         return int.from_bytes(data, byteorder=byteorder, signed=True)
-    elif(dtype == DataType.uint8_t):
+    elif(dtype == "uint8"):
         return int.from_bytes(data, byteorder=byteorder, signed=False)
-    elif(dtype == DataType.kString):
+    elif(dtype == "string"):
         return data.decode("utf-8")
 
 class ModbusMaster:
@@ -58,60 +54,71 @@ class ModbusMaster:
         self.client.close()
         print("Connection Closed Successfully")
 
-{% for entry in input_registers %}
-def ReadInputRegister_{{entry.name}}(master):
-    address = {{ entry.address }}
-    registers = {{ entry.registers }}
-    response = master.client.read_input_registers(address, registers, unit=kModbusAddress)
+registers = {
+{%- for entry in input_registers + holding_registers%}
+  "{{entry.name}}" : {"function": "{{entry.function_type}}",
+                      "address":{{entry.address}},
+                      "registers":{{entry.registers}},
+                      "dtype":"{{entry.dtype}}"},
+{%- endfor %}
+}
+
+def read(master, name, unit, registers=registers):
+    entry = registers[name]
+    address = entry["address"]
+    registers = entry["registers"]
+    if entry["function"] == "holding":
+        response = master.client.read_holding_registers(address, registers, unit=unit)
+    elif entry["function"] == "input":
+        response = master.client.read_input_registers(address, registers, unit=unit)
+    else:
+        raise ValueError("Unknown function %s"%entry["function"])
     data_bytes = RegistersToBytes(response.registers)
     # Transform to correct type
-    value = TransformBytesToDataType({{ entry.dtype }}, data_bytes)
-    return value
-{% endfor %}
-
-{% for entry in holding_registers %}
-def ReadHoldingRegister_{{entry.name}}(master):
-    address = {{ entry.address }}
-    registers = {{ entry.registers }}
-    response = master.client.read_holding_registers(address, registers, unit=kModbusAddress)
-    data_bytes = RegistersToBytes(response.registers)
-    value = TransformBytesToDataType({{ entry.dtype }}, data_bytes)
+    value = TransformBytesToDataType(entry["dtype"], data_bytes)
     return value
 
-def WriteHoldingRegister_{{entry.name}}(master, register_values):
-    registers = {{ entry.registers }}
-    assert(len(register_values) == registers)
-    response = master.client.write_registers({{ entry.address }}, register_values, unit=kModbusAddress)
-    print("{{entry.name}} Response:", response)
-{% endfor %}
+def write(master, name, unit, values, registers=registers):
+    entry = registers[name]
+    address = entry["address"]
+    registers = entry["registers"]
+    if entry["function"] == "holding":
+        response = master.client.write_registers(address, values, unit=unit)
+    else:
+        raise ValueError("Illegal function to write %s"%entry["function"])
+    return response
 
-
-if __name__ == "__main__":
-    port = "/tmp/ptyp0"
-    kModbusAddress = 1
-    if len(sys.argv) > 1:
-        port = sys.argv[1]
-    if len(sys.argv) > 2:
-        kModbusAddress = int(sys.argv[2])
-    print("Device: %s"%port)
-    print("Address: %d"%kModbusAddress)
-    master = ModbusMaster(port, 9600)
+@click.option('--device', '-d', default='/dev/ttyUSB0', help='Serial port, COM1 or similar on Windows, /dev/ttyUSB0 or similar on Linux')
+@click.option('--address', '-a', default=246, type=int, help='Current slave address')
+@click.option('--baud', '-b', default=9600, type=int, help='Baudrate')
+@click.option('--testjig', is_flag=True)
+@click.command()
+def main(device, address, baud, testjig):
+    print("Device: %s"%device)
+    print("Address: %d"%address)
+    if testjig:
+        import MsdsControl
+        master = MsdsControl.ModbusMaster(device, baud)
+    else:
+        master = ModbusMaster(device, baud)
     print("%s\nReading Input Registers\n%s"%("#"*80, "#"*80))
 
-{% for entry in input_registers %}
-    value = ReadInputRegister_{{entry.name}}(master)
-    print("{{ entry.name }}: {}\n".format(value))
-    sleep(sleep_time)
-{% endfor %}
+    input_regs = [(name, row) for name, row in registers.items() if row["function"] == "input"]
+    for name, row in input_regs:
+        value = read(master, name, address)
+        print("{}: {}".format(name, value))
 
-    print("%s\nWriting/Reading Holding Registers\n%s"%("#"*80, "#"*80))
+    holding_regs = [(name, row) for name, row in registers.items() if row["function"] == "holding"]
+    for name, row in holding_regs:
+        value = read(master, name, address)
+        print("{}: {}".format(name, value))
+        response = write(master, name, address, [row["address"]&(0xffff)]*row["registers"])
+        print(response)
+        value = read(master, name, address)
+        print("{}: {}".format(name, value))
+        sleep(sleep_time)
 
-{% for entry in holding_registers %}
-    {{ entry.name }}_write_values = list(range({{ entry.registers }}))
-    response = WriteHoldingRegister_{{entry.name}}(master, {{ entry.name }}_write_values)
-    value = ReadHoldingRegister_{{entry.name}}(master)
-    print("{{ entry.name }}: {}\n".format(value))
-    #assert({{ entry.name }}_write_values == response.registers)
-
-{% endfor %}
     master.disconnect()
+
+if __name__ == "__main__":
+    main()
