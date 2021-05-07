@@ -35,12 +35,17 @@ def make_variable_name(entry_name, registers, max_length=20):
 
     return name[:max_length-len(append)]
 
-class Register:
-    def __init__(self, name, dtype, length, address=0):
+class Entry:
+    def __init__(self, name, dtype, length, function, address=0):
         self.name = name
         self.dtype = dtype
         self.length = int(length)
+        self.function = function
         self.address = address
+
+    @property
+    def function_type(self):
+        return self.function
 
     @property
     def registers(self):
