@@ -1,5 +1,5 @@
-from jinja2 import Template, Environment, FileSystemLoader
 from os import path
+from . import get_template
 import datetime, os
 
 class StructEntry:
@@ -18,10 +18,8 @@ class StructEntry:
         return GetDataTypeCType(self.dtype)
 
 def MakeHeader(entries, fname, name):
-    template_directory = path.join(path.dirname(__file__), 'templates')
-    env = Environment(loader=FileSystemLoader(template_directory))
     register_map_template = "MappedDataStore.h.j2"
-    template = env.get_template(register_map_template)
+    template = get_template(register_map_template)
     rendering = template.render(name=name, entries=entries, timestamp=datetime.datetime.now())
     with open(register_map_template.strip('.j2'), 'w') as f:
         f.write(rendering)
