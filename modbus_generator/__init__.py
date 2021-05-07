@@ -2,6 +2,8 @@ from . TemplateManager import get_template
 from . ModbusEntries import *
 from . data_store import *
 from . WindLdr import *
+from . WindLdr import MakeWindLDRConfig
 from . libmodbus import *
 from . pymodbus import *
 from . documentation import *
+from . schema import Schema

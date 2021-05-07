@@ -55,7 +55,7 @@ class Entry:
     ''' Rounded up length to be integer multiple of storage type '''
     @property
     def required_size(self):
-        return self.base_length + (GetDataTypeSize(self.dtype) * self.base_length) % GetDataTypeSize(self.storage_type)
+        return self.length + (GetDataTypeSize(self.dtype) * self.length) % GetDataTypeSize(self.storage_type)
 
     @property
     def storage_length(self):

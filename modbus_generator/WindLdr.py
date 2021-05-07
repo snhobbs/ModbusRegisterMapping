@@ -1,5 +1,4 @@
-from jinja2 import Template, Environment, FileSystemLoader
-from . ModbusEntries import FunctionType
+from . import get_template
 from os import path
 
 class WindLDREntry():
@@ -10,7 +9,7 @@ class WindLDREntry():
 
     @property
     def functions(self):
-        if self.function_type == FunctionType.kHolding:
+        if self.function_type == "holding":
             return [self.map_entry.read_code, self.map_entry.write_code]
         return [self.map_entry.read_code]
 
@@ -59,12 +58,9 @@ class WindLDREntry():
         return name[:max_length-len(append)]
 
 def MakeWindLDRConfig(entries, fname):
-    template_directory = path.join(path.dirname(__file__), 'templates', "WindLDR")
-    master_address = 0
-    env = Environment(loader=FileSystemLoader(template_directory))
     for register_map_template in ("WindLDRConfiguration.csv.j2", "WindLDRTagEditor.csv.j2"):
-        template = env.get_template(register_map_template)
-        rendering = template.render(entries=entries, master_address=master_address)
+        template = get_template(register_map_template)
+        rendering = template.render(entries=entries)
         with open(register_map_template.strip('.j2'), 'w') as f:
             f.write(rendering)
 
