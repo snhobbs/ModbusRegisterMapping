@@ -1,0 +1,50 @@
+{% set ns = namespace(plc_address=offset) %}      
+{# Holding Registers #}
+
+{# Cycle over entries then servers with read and writes next to each other #}
+
+{%- for entry in schema.holding_registers -%}
+{%- for address, config_name in network.network.items() -%}
+{%- set configuration = network.configurations[config_name]-%}
+
+{%- if entry.name in configuration.holding_registers_read -%}
+{%- for i in range(entry.registers) -%}
+{{ "D%04d" % (ns.plc_address) }},{{entry.plc_variable_name}}{%- if entry.registers > 1 %}_{{i}}{%endif%}_{{ address }},{{ entry.name }} 
+  {%- if entry.registers > 1 %} {{ i + 1 }}/{{ entry.registers }} {% if i == 0 %} (lowest word) {% elif i == entry.registers - 1 %} (highest word) {% endif %}
+  {%- endif %} 
+{% set ns.plc_address = ns.plc_address + 1 %}
+{%- endfor %}
+{%- endif %}
+
+
+{%- if entry.name in configuration.holding_registers_write -%}
+{%- for i in range(entry.registers) %}
+{{ "D%04d" % (ns.plc_address) }},{{entry.plc_variable_name}}{%- if entry.registers > 1 %}_{{i}}{%endif%}_{{ address }},{{ entry.name }} 
+  {%- if entry.registers > 1 %} {{ i + 1 }}/{{ entry.registers }} {% if i == 0 %} (lowest word) {% elif i == entry.registers - 1 %} (highest word) {% endif %}
+  {%- endif %} 
+{% set ns.plc_address = ns.plc_address + 1 %}
+{%- endfor -%}
+{%- endif -%}
+
+{%- endfor -%}
+{%- endfor -%}
+
+
+{# Input Registers #}
+{%- for entry in schema.input_registers -%}
+{%- for address, config_name in network.network.items() %}
+{%- set configuration = network.configurations[config_name]-%}
+
+{%- if entry.name in configuration.input_registers -%}
+{%- for i in range(entry.registers) %}
+{{ "D%04d" % (ns.plc_address) }},{{entry.plc_variable_name}}{%- if entry.registers > 1 %}_{{i}}{%endif%}_{{ address }},{{ entry.name }} 
+  {%- if entry.registers > 1 %} {{ i + 1 }}/{{ entry.registers }} {% if i == 0 %} (lowest word) {% elif i == entry.registers - 1 %} (highest word) {% endif %}
+  {%- endif %} 
+{% set ns.plc_address = ns.plc_address + 1 %}
+{%- endfor %}
+{%- endif -%}
+
+{%- endfor %}
+{%- endfor %}
+
+

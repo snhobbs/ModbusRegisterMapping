@@ -1,0 +1,119 @@
+import sys
+from time import sleep
+from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+
+
+sleep_time = 0
+kModbusAddress = 1
+
+def RegistersToBytes(registers):
+  text = []
+  for register in registers:
+      text.append((register>>8)&0xff)
+      text.append((register&0xff))
+  return bytes(text)
+
+def DecodeText(data: list):
+    return RegistersToBytes(data).decode("utf-8")
+
+def TransformBytesToDataType(dtype : str, data : bytes, byteorder="big"):
+    if(dtype == "int32"):
+        return int.from_bytes(data, byteorder=byteorder, signed=True)
+    elif(dtype == "uint32"):
+        return int.from_bytes(data, byteorder=byteorder, signed=False)
+    elif(dtype == "int16"):
+        return int.from_bytes(data, byteorder=byteorder, signed=True)
+    elif(dtype == "uint16"):
+        return int.from_bytes(data, byteorder=byteorder, signed=False)
+    elif(dtype == "int8"):
+        return int.from_bytes(data, byteorder=byteorder, signed=True)
+    elif(dtype == "uint8"):
+        return int.from_bytes(data, byteorder=byteorder, signed=False)
+    elif(dtype == "string"):
+        return data.decode("utf-8")
+
+class ModbusMaster:
+    parity = 'N'
+    bytesize = 8
+    stopbits = 1
+    method= "rtu"
+    timeout_seconds = .1
+
+    def __init__(self, port, baud = 9600):
+        self.port = port
+        self.baudrate = baud
+        #method=self.method,
+        self.client = ModbusClient(method=self.method, port=self.port, parity=self.parity,
+            timeout=self.timeout_seconds, bytesize=self.bytesize,
+            stopbits=self.stopbits, baudrate=self.baudrate)
+        self.connect()
+
+    def connect(self):
+        self.client.connect()
+        print("Connection Successful")
+
+    def disconnect(self):
+        self.client.close()
+        print("Connection Closed Successfully")
+
+registers = {
+{% for entry in input_registers + holding_registers %}
+  "version" : {"function": entry.function,
+                      "address":entry.address,
+                      "registers":entry.registers,
+                      "dtype":entry.dtype},
+{% endfor %}
+}
+ 
+def read(master, name, unit, registers=registers):
+    entry = registers[name]
+    address = entry["address"]
+    registers = entry["registers"]
+    if entry["function"] == "holding":
+        response = master.client.read_holding_registers(address, registers, unit=unit)
+    elif entry["function"] == "input":
+        response = master.client.read_input_registers(address, registers, unit=unit)
+    else:
+        raise ValueError("Unknown function %s"%entry["function"])
+    try:
+        data_bytes = RegistersToBytes(response.registers)
+    except AttributeError:
+        raise IOError("Modbus Error {}".format(response))
+    # Transform to correct type
+    value = TransformBytesToDataType(entry["dtype"], data_bytes)
+    return value
+
+def write(master, name, unit, values, registers=registers):
+    entry = registers[name]
+    address = entry["address"]
+    registers = entry["registers"]
+    if entry["function"] == "holding":
+        response = master.client.write_registers(address, values, unit=unit)
+    else:
+        raise ValueError("Illegal function to write %s"%entry["function"])
+    return response
+
+@click.option('--device', '-d', default='/dev/ttyUSB0', help='Serial port, COM1 or similar on Windows, /dev/ttyUSB0 or similar on Linux')
+@click.option('--address', '-a', default=246, type=int, help='Current slave address')
+@click.option('--baud', '-b', default=9600, type=int, help='Baudrate')
+@click.option('--testjig', is_flag=True)
+@click.command()
+def main(device, address, baud, testjig):
+    print("Device: %s"%device)
+    print("Address: %d"%address)
+    if testjig:
+        import MsdsControl
+        master = MsdsControl.ModbusMaster(device, baud)
+    else:
+        master = ModbusMaster(device, baud)
+    for name, row in registers.items():
+        while True:
+            try:
+                value = read(master, name, address)
+                break
+            except IOError:
+                sleep(sleep_time)
+                pass
+        print("{}: {}".format(name, value))
+
+    master.disconnect()

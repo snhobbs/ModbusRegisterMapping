@@ -1,8 +1,0 @@
-{# Jinja Template #}
-# {{ title }}
-
-| Entry |  Name  |  Data Type  |  Address | Register Count |
-|-------|:------:|:-----------:|:--------:|:--------------:|
-{%- for entry in entries %}
-| {{ loop.index }}.    | {{ entry.name }} | {{ entry.dtype.name }} {% if entry.length > 1 %}[{{ entry.length }}]  {% endif %} | {{ "0x%d%05x" %(entry.memory_code, entry.address) }} | {{ entry.registers }} |
-{%- endfor %}
