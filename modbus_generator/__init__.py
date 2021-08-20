@@ -1,4 +1,4 @@
-from . schema import Schema
+from . schema import *
 from . ModbusEntries import *
 from . data_store import *
 from . modbus_basic import *
