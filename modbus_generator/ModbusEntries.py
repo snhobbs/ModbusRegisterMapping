@@ -36,6 +36,12 @@ class MapEntry(ModbusRegister):
             super().__init__(kwargs["name"], kwargs["dtype"], kwargs["length"], kwargs["function_type"])
         self._address = None
 
+    def __repr__(self):
+        return f"{type(self)}({self.name}, {self.dtype}, {self.length}, {self.address}, {self.function_type})"
+
+    def __str__(self):
+        return repr(self)
+
     def set_address(self, address):
         self._address = address
 
