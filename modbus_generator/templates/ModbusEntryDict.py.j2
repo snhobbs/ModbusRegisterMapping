@@ -15,3 +15,5 @@ modbus_entries = (
   ModbusEntry(name="{{entry['name']}}", dtype="{{entry.dtype}}", length={{entry.length}}, address={{entry.address}}, registers={{entry["register count"]}}, modbus_type="{{entry.type}}"),
 {%- endfor %}
 )
+
+modbus_entries_dict = {entry.name : entry for entry in modbus_entries}
