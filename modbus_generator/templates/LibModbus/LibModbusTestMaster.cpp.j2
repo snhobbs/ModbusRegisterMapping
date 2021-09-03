@@ -13,6 +13,10 @@
 #include <cstdint>
 #include <unistd.h>
 #include <cstring>
+#include <string>
+#include <vector>
+
+
 template<typename T>
 void PrintArray(const T& t) {
   for (auto pt : t) {
@@ -21,6 +25,25 @@ void PrintArray(const T& t) {
   std::cout << std::endl;
 }
 
+
+struct ModbusEntry {
+  std::string name;
+  std::string dtype;
+  std::string type;
+  size_t length;
+  size_t address;
+  size_t registers;
+
+  ModbusEntry(std::string name, std::string dtype, std::string type, size_t length, size_t address, size_t registers):
+  name_{name}, dtype_{dtype}, type_{type}, length_{length}, address_{address}, registers_{registers}):
+  {}
+};
+
+static const constexpr std::vector<ModbusEntry> entries {
+  {% for entry in entries %}
+  {{entry["name"], entry["data type"], entry["type"], entry["length"], entry["address", entry["register count"]]}}
+  {% endfor %}
+};
 
 template<typename T>
 int ReadPrint(modbus_t* ctx, const int kAddressStart, int cnt) {
@@ -88,45 +111,33 @@ int main(int argc, char** argv) {
   
   printf("Connection Successful\n");
   
-  printf("\n\nWriting/Reading Input Registers\n\n");
+  for (auto& entry : entries) {
+    std::cout << "Reading " << entry.name << std::endl;
+    std::vector<uint16_t> read_buffer{};
+    read_buffer.reserve(entry.registers);
 
-  {% for entry in input_registers %}
-  printf("Reading {{ entry.name }}\n");
-  std::array<uint16_t, {{ entry.registers }}> read_buffer_{{ entry.name }} {};
-  sleep(1);
-  modbus_read_input_registers(ctx, {{ entry.address }}, {{ entry.registers }}, read_buffer_{{ entry.name }}.data());
-  {
-  std::array<uint8_t, {{ entry.registers }} * sizeof(uint16_t)> u8array{};
-  Modbus::MakeRegistersToBytes(read_buffer_{{ entry.name }}, ArrayView<uint8_t>(u8array.size(), u8array.data()));
-  inregs.SetFieldFromAddress({{ entry.address }}, ArrayView<const uint8_t>(u8array.size(), u8array.data()));
-  const auto value = inregs_wrapper.get_{{ entry.name }}();
-  {% if entry.length > 1 %}
-  for (auto pt : value) {
-    std::cout << pt << " ";
+    //sleep(1);
+    if (entry.type == "input register") {
+      modbus_read_input_registers(ctx, entry.address, entry.registers, read_buffer.data());  
+      inregs.SetFieldFromAddress(entry.address, ArrayView<const uint8_t>(u8array.size(), u8array.data()));
+      const auto value = inregs_wrapper.get_{{ entry['name'] }}();
+      std::cout << value << std::endl;
+    }
+    else if (entry.type == "holding register") {
+      std::vector<uint16_t> write_buffer{};
+      write_buffer.reserve(entry.registers);
+      for (size_t i=0; i<entry.registers; i++) {
+        write_buffer[i] = 0xffff - i;
+      }
+      modbus_write_registers(ctx, entry.address, entry.registers, write_buffer.data());
+      sleep(1);
+
+      std::vector<uint8_t> u8array{};
+      u8array.reserve(entry.registers*sizeof(uint16_t));
+      Modbus::MakeRegistersToBytes(read_buffer, ArrayView<uint8_t>(u8array.size(), u8array.data()));
+    }
+    ReadPrint<decltype(read_buffer)>(ctx, entry.address, entry.registers);
   }
-  std::cout << "\n\n";
-  {% else %}
-  std::cout << value << "\n\n";
-  {% endif %}
-  }
-  {%- endfor %}
-
-  printf("Writing/Reading Holding Registers\n");
-  {% for entry in holding_registers %}
-  printf("Writing {{ entry.name }}\n");
-  const std::array<uint16_t, {{ entry.registers }}> write_buffer_{{ entry.name }} {
-  {%- for count in range(entry.registers) %}
-    0xffff - {{ count }},
-  {%- endfor %}
-  };
-  modbus_write_registers(ctx, {{ entry.address }}, {{ entry.registers }}, write_buffer_{{ entry.name }}.data());
-  sleep(1);
-
-  printf("Reading {{ entry.name }}\n");
-  std::array<uint16_t, {{ entry.registers }}> read_buffer_{{ entry.name }} {};
-  ReadPrint<decltype(read_buffer_{{ entry.name }})>(ctx, {{ entry.address }}, {{ entry.registers }});
-  sleep(1);
-  {% endfor %}
 
   modbus_close(ctx);
   modbus_free(ctx);

@@ -1,17 +1,17 @@
-class ModbusDescriptor:
-    def __init__(self, name, dtype, address, registers):
+class ModbusEntry:
+    def __init__(self, name, dtype, length, address, registers, modbus_type):
         self.name = name
         self.dtype = dtype
+        self.length = length
         self.address = address
         self.registers = registers
+        self.type = modbus_type
 
-InputRegisters = dict(
-{% for entry in input_registers %}
-    {{entry.name}} = ModbusDescriptor("{{entry.name}}", {{entry.dtype}}, {{entry.address}}, {{entry.registers}}),
-{%- endfor %}
-)
-HoldingRegisters = dict(
-{% for entry in holding_registers %}
-    {{entry.name}} = ModbusDescriptor("{{entry.name}}", {{entry.dtype}}, {{entry.address}}, {{entry.registers}}),
+    def __repr__(self):
+      return f"{self.__class__} {self.type} {self.name} {self.dtype} {self.length} {self.address} {self.registers}"
+
+modbus_entries = (
+{% for entry in entries %}
+  ModbusEntry(name="{{entry['name']}}", dtype="{{entry.dtype}}", length={{entry.length}}, address={{entry.address}}, registers={{entry["register count"]}}, modbus_type="{{entry.type}}"),
 {%- endfor %}
 )
