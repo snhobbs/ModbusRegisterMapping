@@ -1,0 +1,42 @@
+{%- if namespace|length != 0 -%}
+namespace {{ namespace }};
+{%- endif %}
+
+
+
+struct HoldingRegisters {
+{% for entry in schema.holding_registers %}
+  {{entry.name}}:
+  {%- if(entry.length > 1) -%}
+  [
+  {%- endif -%}
+  {%- if entry.dtype == "string" -%}
+  uint8
+  {%- else -%}
+  {{ entry.dtype }}
+  {%- endif -%}
+  {%- if(entry.length > 1) -%}
+   :{{ entry.length }}]
+  {%- endif -%}
+  ;
+{%- endfor %}
+}
+
+
+struct InputRegisters {
+{% for entry in schema.input_registers %}
+  {{entry.name}}:
+  {%- if(entry.length > 1) -%}
+  [
+  {%- endif -%}
+  {%- if entry.dtype == "string" -%}
+  uint8
+  {%- else -%}
+  {{ entry.dtype }}
+  {%- endif -%}
+  {%- if(entry.length > 1) -%}
+   :{{ entry.length }}]
+  {%- endif -%}
+  ;
+{%- endfor %}
+}

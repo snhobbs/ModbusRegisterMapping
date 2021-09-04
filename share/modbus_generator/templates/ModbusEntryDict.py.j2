@@ -1,0 +1,19 @@
+class ModbusEntry:
+    def __init__(self, name, dtype, length, address, registers, modbus_type):
+        self.name = name
+        self.dtype = dtype
+        self.length = length
+        self.address = address
+        self.registers = registers
+        self.type = modbus_type
+
+    def __repr__(self):
+      return f"{self.__class__} {self.type} {self.name} {self.dtype} {self.length} {self.address} {self.registers}"
+
+modbus_entries = (
+{% for entry in entries %}
+  ModbusEntry(name="{{entry['name']}}", dtype="{{entry['ctype']}}", length={{entry.length}}, address={{entry.address}}, registers={{entry["register count"]}}, modbus_type="{{entry.type}}"),
+{%- endfor %}
+)
+
+modbus_entries_dict = {entry.name : entry for entry in modbus_entries}
