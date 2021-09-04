@@ -59,17 +59,10 @@ def clean_df(schema):
 
 
 @click.command()
-@click.option('--file', '-f', type=str, required=True, help='Schema file')
+@click.option('--file', '-f', type=str, required=True, help='Single device description file')
 @click.option('--cpp', '-c', is_flag=True, help='cpp list of objects')
 @click.option('--python', '-p', is_flag=True, help='Python list of objects')
 @click.option('--csv', is_flag=True, help='Output formated CSV')
-#@click.option('--pymodbus', '-p', is_flag=True, help='Pymodbus server')
-#@click.option('--libmodbus', '-l', is_flag=True, help='libmodbus server')
-#@click.option('--libmodbus-includes', multiple=True, type=str, help='Additional includes for libmodbus')
-#@click.option('--modbus_basic', '-m', is_flag=True, help='ModbusBasic server')
-#@click.option('--modbus_basic-includes', multiple=True, type=str, help='Additional includes for modbus basic')
-#@click.option('--windldr', '-w', is_flag=True, help='Windldr server configuration')
-#@click.option('--windldr-offset', type=int, default=0, help='Offset for windldr')
 @click.option('--md', is_flag=True, help='Markdown Documentation')
 @click.option('--test_master', '-t', is_flag=True, help='Generate corresponding test files for the languages chosen')
 def main(**kwargs):
@@ -108,16 +101,6 @@ def main(**kwargs):
         with open(fname, 'w') as f:
             f.write(rendering)
         os.system("clang-format %s -i --style=Google"%fname)
-
-
-    #if kwargs["libmodbus"]:
-    #    pass
-        # Fix this with new lib
-        #template_name = "LibModbusTestMaster.cpp.j2"
-        #template = modbus_generator.get_template("LibModbus", template_name)
-        #rendering = template.render(entries=lines, name=name, timestamp=timestamp)
-        #with open(template_name.strip(".j2"), 'w') as f:
-        #    f.write(rendering)
 
     if kwargs["md"]:
         # "0x3%05x"

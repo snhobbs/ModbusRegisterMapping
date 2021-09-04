@@ -4,13 +4,13 @@
 ## Holding Registers
 | Entry |  Name  |  Data Type  |  Address | Register Count |
 |-------|:------:|:-----------:|:--------:|:--------------:|
-{%- for entry in schema.holding_registers %}
-| {{ loop.index }}.    | {{ entry.name }} | {{ entry.dtype }} {% if entry.length > 1 %}[{{ entry.length }}]  {% endif %} | {{ "0x4%05x" %(entry.address) }} | {{ entry.registers }} |
+{%- for entry in schema["holding register"] %}
+| {{ loop.index }}.    | {{ entry["name"] }} | {{ entry["data type"] }} {% if entry.length > 1 %}[{{ entry.length }}]  {% endif %} | {{ "%d" %(entry.address) }} | {{ entry["register count"] }} |
 {%- endfor %}
 
 ## Input Registers
 | Entry |  Name  |  Data Type  |  Address | Register Count |
 |-------|:------:|:-----------:|:--------:|:--------------:|
-{%- for entry in schema.input_registers %}
-| {{ loop.index }}.    | {{ entry.name }} | {{ entry.dtype }} {% if entry.length > 1 %}[{{ entry.length }}]  {% endif %} | {{ "0x3%05x" %(entry.address) }} | {{ entry.registers }} |
+{%- for entry in schema["input register"] %}
+| {{ loop.index }}.    | {{ entry["name"] }} | {{ entry["data type"] }} {% if entry.length > 1 %}[{{ entry.length }}]  {% endif %} | {{ "%d" %(entry.address) }} | {{ entry["register count"] }} |
 {%- endfor %}
