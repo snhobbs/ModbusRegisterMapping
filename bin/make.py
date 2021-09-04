@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import math
 import datetime
-
+from os import path
 
 def get_data_type_register_count(dtype, length):
     bytes = 0
@@ -73,16 +73,18 @@ def clean_df(schema):
 @click.option('--md', is_flag=True, help='Markdown Documentation')
 @click.option('--test_master', '-t', is_flag=True, help='Generate corresponding test files for the languages chosen')
 def main(**kwargs):
+    fname = kwargs.pop("file")
     try:
-        schema = clean_df(pd.read_csv(kwargs.pop("file"), skipinitialspace = True))
+        schema = clean_df(pd.read_csv(fname, skipinitialspace = True))
     except (FileNotFoundError):
-        print("Schema file %s not found"%kwargs["file"])
+        print("Schema file %s not found"%fname)
         return errno.ENOENT
 
     timestamp = datetime.datetime.now()
 
     if kwargs["python"]:
-        template = modbus_generator.get_template("", "ModbusEntryDict.py.j2")
+        template_name =  "ModbusEntryDict.py.j2"
+        template = modbus_generator.get_template("", template_name)
         entries = [p for _, p in schema.iterrows()]
         rendering = template.render(entries=entries)
         with open("modbus_server_objects.py", 'w') as f:

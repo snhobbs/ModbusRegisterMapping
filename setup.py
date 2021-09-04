@@ -5,7 +5,7 @@ with open("README.md", 'r') as f:
     description = f.read()
 
 setup(name='modbus_generator',
-    version='1.0.1',
+    version='1.0.2',
     description=description,
     url='',
     author='ElectroOptical Innovations, LLC.',
@@ -14,7 +14,7 @@ setup(name='modbus_generator',
     packages=find_packages(),
     install_requires=[
         'jinja2',
-        'data-store',
+        #'data-store',
         'click'
     ],
     test_suite='nose.collector',
