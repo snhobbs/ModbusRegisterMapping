@@ -66,12 +66,26 @@ def clean_df(schema):
 @click.option('--md', is_flag=True, help='Markdown Documentation')
 @click.option('--test_master', '-t', is_flag=True, help='Generate corresponding test files for the languages chosen')
 def main(**kwargs):
+    '''
+    csv format:
+        + name: tag of entry
+        + type: function type one of "input register", "holding register"...
+        + data type: type needed to print the value in a sensible way. [ctype, string, compound type...]
+        + length: Length of array of data type [string is a list of chars]
+        + address: Modbus address
+        + register counts: number of Modbus registers (16 bit)
+        + ctype: storage type [uint8_t, uint32_t, ...]
+    '''
+
     fname = kwargs.pop("file")
+    schema = pd.read_csv(fname, skipinitialspace = True)
+    '''
     try:
         schema = clean_df(pd.read_csv(fname, skipinitialspace = True))
     except (FileNotFoundError):
         print("Schema file %s not found"%fname)
         return errno.ENOENT
+    '''
 
     timestamp = datetime.datetime.now()
 
@@ -86,10 +100,11 @@ def main(**kwargs):
     if kwargs["cpp"]:
         template = modbus_generator.get_template("cpp", "ModbusBasicServer.h.j2")
         for entry_type in schema.type.unique():
-            name = entry_type.replace(" ", "_")
             lines = [pt for _, pt in list(schema[schema.type == entry_type].iterrows())]
-            rendering = template.render(entries=lines, name=name, timestamp=timestamp)
-            fname = f"modbus_basic_server_{name}.h"
+            entry_type = entry_type.replace(" ", "_")
+            lines = [pt for pt in lines if pt["name"] != "UNUSED"]
+            rendering = template.render(entries=lines, name=entry_type, timestamp=timestamp)
+            fname = f"modbus_basic_server_{entry_type}.h"
             with open(fname, 'w') as f:
                 f.write(rendering)
             os.system("clang-format %s -i --style=Google"%fname)
@@ -97,7 +112,7 @@ def main(**kwargs):
         template = modbus_generator.get_template("cpp", template_name)
         fname = template_name.strip(".j2")
         entries = [p for _, p in schema.iterrows()]
-        rendering = template.render(entries=entries, name=name, timestamp=timestamp)
+        rendering = template.render(entries=entries, name=entry_type, timestamp=timestamp)
         with open(fname, 'w') as f:
             f.write(rendering)
         os.system("clang-format %s -i --style=Google"%fname)

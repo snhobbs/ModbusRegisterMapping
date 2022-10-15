@@ -53,9 +53,6 @@ struct {{ name }} {
 };
 
 
-
-
-
 class Wrapper {
  public:
   static const constexpr std::size_t entries_ = {{ entries | length }};
@@ -100,7 +97,7 @@ class Wrapper {
         Utilities::ArrayFromBytes(data, data_bank_->{{ entry["name"] }}, size, sizeof(data_bank_->{{ entry["name"] }}[0]));
       {% else %}
         const size_t max_write_bytes = std::min(size, sizeof(data_bank_->{{ entry["name"] }}));
-        Utilities::ConvertToType<{{ entry["data type"] }}>(data, &data_bank_->{{ entry["name"] }}, max_write_bytes);
+        Utilities::ConvertToType<{{ entry["ctype"] }}>(data, &data_bank_->{{ entry["name"] }}, max_write_bytes);
       {%- endif %}
         break;
       }
@@ -136,19 +133,19 @@ class Wrapper {
 
   {%- for entry in entries %}
   {%- if entry.length > 1 %}
-  ArrayView<const {{ entry["data type"] }}> get_{{ entry["name"] }}(void) const {
-    return ArrayView<const {{ entry["data type"] }}>{ {{ entry.length }}, data_bank_->{{ entry["name"] }} };
+  ArrayView<const {{ entry["ctype"] }}> get_{{ entry["name"] }}(void) const {
+    return ArrayView<const {{ entry["ctype"] }}>{ {{ entry.length }}, data_bank_->{{ entry["name"] }} };
   }
-  void set_{{ entry["name"] }}(const {{ entry["data type"] }} *const value, std::size_t length) {
+  void set_{{ entry["name"] }}(const {{ entry["ctype"] }} *const value, std::size_t length) {
     for (std::size_t i = 0; i < length; i++) {
       data_bank_->{{ entry["name"] }}[i] = value[i];
     }
   }
   {%- else %}
-  {{ entry["data type"] }} get_{{ entry["name"] }}(void) const {
+  {{ entry["ctype"] }} get_{{ entry["name"] }}(void) const {
     return data_bank_->{{ entry["name"] }};
   }
-  void set_{{ entry["name"] }}({{ entry["data type"] }} value) {
+  void set_{{ entry["name"] }}({{ entry["ctype"] }} value) {
     data_bank_->{{ entry["name"] }} = value;
   }
   {%- endif %}
