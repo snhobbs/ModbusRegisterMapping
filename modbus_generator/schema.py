@@ -1,25 +1,31 @@
 import configparser
+import numpy as np
 
-def SetAddresses(entries):
-    address = 0
+def GetAddresses(entries, starting=0, alignment=4):
+    addresses = []
+    address = starting
     for entry in entries:
-        if entry.dtype not in ['uint16', 'int16']:
-            entry.address = address + address % 2
+        if entry["data type"] not in ['uint16_t', 'int16_t']:
+            current_address = int(address + address % (alignment//2))  # Only allow uint16s to be unaligned
         else:
-            entry.address = address
-        address = entry.address + entry.registers
+            current_address = address
+        addresses.append(int(address))
+        address = current_address + entry["register count"]
+    return np.array(addresses, dtype=int)
+
 
 def get_dtype_size(dtype):
-    if dtype in ["int8", "uint8", "string"]:
+    if dtype in ["int8_t", "uint8_t", "string"]:
         return 1;
-    if dtype in ["int16", "uint16"]:
+    if dtype in ["int16_t", "uint16_t"]:
         return 2;
-    if dtype in ["int32", "uint32"]:
+    if dtype in ["int32_t", "uint32_t"]:
         return 4;
-    if dtype in ["int64", "uint64"]:
+    if dtype in ["int64_t", "uint64_t"]:
         return 8;
     print(dtype)
     assert(0)
+
 
 def make_variable_name(entry_name, registers, max_length=20):
     append = ""
@@ -35,22 +41,27 @@ def make_variable_name(entry_name, registers, max_length=20):
 
     return name[:max_length-len(append)]
 
+
+def calculate_entry_registers(dtype, length):
+    entry_size = get_dtype_size(dtype)*length
+    return int(entry_size//2 + entry_size % 2)
+
+
 class Entry:
     def __init__(self, name, dtype, length, function, address=0):
         self.name = name
         self.dtype = dtype
         self.length = int(length)
-        self.function = function
+        self.type = function
         self.address = address
 
     @property
     def function_type(self):
-        return self.function
+        return self.type
 
     @property
     def registers(self):
-        entry_size = get_dtype_size(self.dtype)*self.length
-        return entry_size//2 + entry_size%2
+        return calculate_entry_registers(self.dtype, self.length)
 
     @property
     def plc_variable_name(self):
