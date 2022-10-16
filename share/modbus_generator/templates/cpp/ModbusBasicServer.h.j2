@@ -116,8 +116,8 @@ class Wrapper {
       }
       {%- for entry in entries %}
       case(EntryIdentifier::{{ entry["name"] }}) : {
-      {%- if entry.length > 1 %}
-        Utilities::ArrayToBytes(data_bank_->{{ entry["name"] }}, data, size, sizeof(data_bank_->{{ entry["name"] }}[0]));
+      {%- if entry["length"] > 1 %}
+        Utilities::ArrayToBytes(data_bank_->{{ entry["name"] }}, data, size, sizeof(data_bank_->{{ entry["name"] }}));
       {%- else %}
         const size_t max_write_bytes = std::min(size, sizeof(data_bank_->{{ entry["name"] }}));
         Utilities::ConvertToBytes(data_bank_->{{ entry["name"] }}, data, max_write_bytes);
